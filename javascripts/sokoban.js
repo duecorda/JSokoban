@@ -1,6 +1,6 @@
 var Sokoban = function(_title) {
 	this.title = (/pack_title=([_a-z]+)/i.test(location.search)) ? /pack_title=([_a-z]+)/i.exec(location.search).last() : _title || "yoshio_murase";
-	this.stage = (/start_stage=([0-9]+)/i.test(location.search)) ? Number(/start_stage=([0-9]+)/i.exec(location.search).last()) : 1;
+	this.level = (/level=([0-9]+)/i.test(location.search)) ? Number(/level=([0-9]+)/i.exec(location.search).last()) : 1;
 
 	this.warehouses = packs[this.title];
 
@@ -37,7 +37,7 @@ Sokoban.prototype.prepareDom = function() {
 }
 
 Sokoban.prototype.init = function() {
-	this.warehouse = this.warehouses[Number(this.stage) - 1];
+	this.warehouse = this.warehouses[Number(this.level) - 1];
 	this.clearMap();
 
 	this.renderWarehouse();
@@ -60,19 +60,19 @@ Sokoban.prototype.undo = function() {
 	}
 };
 
-Sokoban.prototype.reloadStage = function() {
+Sokoban.prototype.reloadLevel = function() {
 	this.init();
 };
 
-Sokoban.prototype.jumpToStage = function(stage) {
-	this.stage = Number(stage);
+Sokoban.prototype.jumpToLevel = function(level) {
+	this.level = Number(level);
 	this.init();
 };
 
 Sokoban.prototype.jumpToPack = function(pack) {
 	this.title = pack;
 	this.warehouses = packs[pack];
-	this.jumpToStage(1);
+	this.jumpToLevel(1);
 };
 
 Sokoban.prototype.restore = function(map) {
@@ -111,11 +111,11 @@ Sokoban.prototype.describe = function() {
 	var _port = (location.port) ? ":" + location.port : "";
 	var full_url = location.protocol + "//" + location.hostname + _port + location.pathname;
 
-	this.uri.innerHTML = full_url + "?pack_title=" + this.title + "&start_stage=" + this.stage;
+	this.uri.innerHTML = full_url + "?pack_title=" + this.title + "&level=" + this.level;
 
 	this.board.innerHTML = "<ul>" +
 		"<li><select onchange='s.jumpToPack(this.value)'>" + this.options_for_packs() + "</select></li>" +
-		"<li><select onchange='s.jumpToStage(this.value)'>" + this.options_for_stages() + "</select></li>" +
+		"<li><select onchange='s.jumpToLevel(this.value)'>" + this.options_for_levels() + "</select></li>" +
 	"</ul>";
 };
 
@@ -126,10 +126,10 @@ Sokoban.prototype.scoring = function() {
 	"</dl>";
 };
 
-Sokoban.prototype.options_for_stages = function() {
+Sokoban.prototype.options_for_levels = function() {
 	var options = "";
 	for(var i=1;i<=this.warehouses.length;i++)
-		options += ((Number(this.stage) == i) ? "<option selected " : "<option ") + "value='" + i + "'> Stage " + i + "</option>";
+		options += ((Number(this.level) == i) ? "<option selected " : "<option ") + "value='" + i + "'> Level " + i + "</option>";
 	return options;
 };
 
@@ -143,7 +143,7 @@ Sokoban.prototype.options_for_packs = function() {
 
 Sokoban.prototype.action_buttons = function() {
 	return "<ul>" +
-		"<li><a href='#reload' onclick='s.reloadStage();return false;'>reload stage</a></li>" +
+		"<li><a href='#reload' onclick='s.reloadLevel();return false;'>reload level</a></li>" +
 		"<li><a href='#undo' onclick='s.undo();return false;'>undo</a></li>" +
 	"</ul>";
 };
@@ -184,17 +184,17 @@ Sokoban.prototype.keycodeToDirection = function(_keycode) {
 Sokoban.prototype.gameHasCleared = function() {
 	for(var i=0; i<this.map.goals.length; i++) if(!this.isA(this.map.goals[i], "crate")) return false;
 	
-	if(Number(this.stage) < this.warehouses.length) this.stageHasCleared();
+	if(Number(this.level) < this.warehouses.length) this.levelHasCleared();
 	else this.packHasCleared();
 };
 
-Sokoban.prototype.stageHasCleared = function() {
-	var msg = "Stage has cleared. <a href='#next' onclick='s.jumpToStage(" + Number(this.stage + 1) + ");return false'>Next Stage.</a>";
+Sokoban.prototype.levelHasCleared = function() {
+	var msg = "Level has cleared. <a href='#next' onclick='s.jumpToLevel(" + Number(this.level + 1) + ");return false'>Next Level.</a>";
 	this.sendMessage(msg);
 };
 
 Sokoban.prototype.packHasCleared = function() {
-	var msg = "All stages have cleared.";
+	var msg = "All levels have cleared.";
 	this.sendMessage(msg);
 };
 
