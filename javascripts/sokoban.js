@@ -1,6 +1,11 @@
 var Sokoban = function(_title) {
-	this.title = (/pack_title=([_a-z]+)/i.test(location.search)) ? /pack_title=([_a-z]+)/i.exec(location.search).last() : _title || "yoshio_murase";
-	this.level = (/level=([0-9]+)/i.test(location.search)) ? Number(/level=([0-9]+)/i.exec(location.search).last()) : 1;
+	
+	var _saved = getCookie("jsokoban");
+	var default_title = (!_saved) ? "yoshio_murase" : /^(.*)_[0-9]+$/.exec(_saved).last();
+	var default_level = (!_saved) ? 1 : Number(/_([0-9]+)$/.exec(_saved).last());
+
+	this.title = (/pack_title=([_a-z]+)/i.test(location.search)) ? /pack_title=([_a-z]+)/i.exec(location.search).last() : _title || default_title;
+	this.level = (/level=([0-9]+)/i.test(location.search)) ? Number(/level=([0-9]+)/i.exec(location.search).last()) : default_level;
 
 	this.warehouses = packs[this.title];
 
@@ -45,6 +50,7 @@ Sokoban.prototype.init = function() {
 	this.sendMessage();
 	this.describe();
 	this.scoring();
+	this.save();
 };
 
 Sokoban.prototype.undo = function() {
@@ -100,6 +106,10 @@ Sokoban.prototype.renderWarehouse = function() {
 			_row.appendChild(this.createElement({ id: _id, className: _classes }));
 		}
 	}
+};
+
+Sokoban.prototype.save = function() {
+	setCookie("jsokoban", this.title + "_" + this.level, 365);
 };
 
 Sokoban.prototype.sendMessage = function(_message) {
