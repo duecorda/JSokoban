@@ -12,15 +12,28 @@ var Sokoban = function(_title) {
 
 Sokoban.prototype.prepareDom = function() {
   this.dom = document.getElementById("sokoban");
-	this.board = this.createElement({id: "sokoban_board", className: "clearfix"});
+
+	this.uri = this.createElement({id: "sokoban_uri"});
+	this.dom.appendChild(this.uri);
+
+	var _rail = this.createElement({id: "sokoban_rail"});
+	var _content = this.createElement({id: "sokoban_content"});
+
+	this.dom.appendChild(_rail);
+	this.dom.appendChild(_content);
+
 	this.estate = this.createElement({id: "sokoban_estate", className: "clearfix"});
+	this.board = this.createElement({id: "sokoban_board", className: "clearfix"});
 	this.card = this.createElement({id: "sokoban_card", className: "clearfix"});
 	this.panel = this.createElement({id: "sokoban_panel", className: "clearfix", innerHTML: this.action_buttons()});
+	this.message_board = this.createElement({id: "sokoban_message_board", className: "clearfix"});
 
-	this.dom.appendChild(this.board)
-	this.dom.appendChild(this.estate)
-	this.dom.appendChild(this.card)
-	this.dom.appendChild(this.panel)
+	_content.appendChild(this.estate)
+	_content.appendChild(this.message_board)
+
+	_rail.appendChild(this.board)
+	_rail.appendChild(this.card)
+	_rail.appendChild(this.panel)
 }
 
 Sokoban.prototype.init = function() {
@@ -29,6 +42,7 @@ Sokoban.prototype.init = function() {
 
 	this.renderWarehouse();
 
+	this.sendMessage();
 	this.describe();
 	this.scoring();
 };
@@ -88,11 +102,21 @@ Sokoban.prototype.renderWarehouse = function() {
 	}
 };
 
+Sokoban.prototype.sendMessage = function(_message) {
+	if(!_message) _message = "";
+	this.message_board.innerHTML = _message;
+};
+
 Sokoban.prototype.describe = function() {
-	this.board.innerHTML = "<dl>" +
-		"<dt>title</dt><dd><select onchange='s.jumpToPack(this.value)'>" + this.options_for_packs() + "</select></dd>" +
-		"<dt>stage</dt><dd><select onchange='s.jumpToStage(this.value)'>" + this.options_for_stages() + "</select></dd>" +
-	"</dl>";
+	var _port = (location.port) ? ":" + location.port : "";
+	var full_url = location.protocol + "//" + location.hostname + _port + location.pathname;
+
+	this.uri.innerHTML = full_url + "?pack_title=" + this.title + "&start_stage=" + this.stage;
+
+	this.board.innerHTML = "<ul>" +
+		"<li><select onchange='s.jumpToPack(this.value)'>" + this.options_for_packs() + "</select></li>" +
+		"<li><select onchange='s.jumpToStage(this.value)'>" + this.options_for_stages() + "</select></li>" +
+	"</ul>";
 };
 
 Sokoban.prototype.scoring = function() {
@@ -137,14 +161,18 @@ Sokoban.prototype.break_event = function(_e) {
 Sokoban.prototype.bindEvent = function() {
 	OnEvent.add(window.document, "keydown", BindEvent(this, function(_e) {
 		OnEvent.add(window, "beforeunload", OnEvent.clear);
-		var keycode = _e.keycode || _e.keyCode;
-		if(/(37|38|39|40)/.test(keycode)) {
-			this.break_event(_e);
-			this.moveWorker(this.keycodeToDirection(keycode));
-		}
-		else if(_e.ctrlKey && /90/.test(keycode)) {
-			this.break_event(_e);
-			this.undo();
+
+		var current_node = _e.target || _e.srcElement;
+		if(!/^(textarea|input)$/i.test(current_node.tagName)) {
+			var keycode = _e.keycode || _e.keyCode;
+			if(/(37|38|39|40)/.test(keycode)) {
+				this.break_event(_e);
+				this.moveWorker(this.keycodeToDirection(keycode));
+			}
+			else if(_e.ctrlKey && /90/.test(keycode)) {
+				this.break_event(_e);
+				this.undo();
+			}
 		}
 	}));
 };
@@ -161,11 +189,13 @@ Sokoban.prototype.gameHasCleared = function() {
 };
 
 Sokoban.prototype.stageHasCleared = function() {
-	this.estate.innerHTML = "Stage has cleared. <a href='#next' onclick='s.jumpToStage(" + Number(this.stage + 1) + ");return false'>Next Stage.</a>";
+	var msg = "Stage has cleared. <a href='#next' onclick='s.jumpToStage(" + Number(this.stage + 1) + ");return false'>Next Stage.</a>";
+	this.sendMessage(msg);
 };
 
 Sokoban.prototype.packHasCleared = function() {
-	this.estate.innerHTML = "All stages have cleared.";
+	var msg = "All stages have cleared.";
+	this.sendMessage(msg);
 };
 
 Sokoban.prototype.moveCrate = function(_worker_xy, _crate_xy, _direction) {
