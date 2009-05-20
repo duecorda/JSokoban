@@ -100,7 +100,7 @@ Sokoban.prototype.renderWarehouse = function() {
 		this.estate.appendChild(_row);
 		for(var x=0; x<_warehouse[y].length; x++) {
 			var _id = x + "_" + y;
-			var _classes = this.symToClass(_warehouse[y][x]);
+			var _classes = this.symToClass(_warehouse[y].charAt([x]));
 			if(/worker/i.test(_classes)) this.map.worker = _id;
 			else if(/goal/i.test(_classes)) this.map.goals.push(_id);
 			_row.appendChild(this.createElement({ id: _id, className: _classes }));
@@ -169,8 +169,8 @@ Sokoban.prototype.break_event = function(_e) {
 	}
 }
 Sokoban.prototype.bindEvent = function() {
+	OnEvent.add(window, "beforeunload", OnEvent.clear);
 	OnEvent.add(window.document, "keydown", BindEvent(this, function(_e) {
-		OnEvent.add(window, "beforeunload", OnEvent.clear);
 
 		var current_node = _e.target || _e.srcElement;
 		if(!/^(textarea|input)$/i.test(current_node.tagName)) {
